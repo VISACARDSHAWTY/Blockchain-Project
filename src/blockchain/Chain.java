@@ -6,7 +6,8 @@ import com.google.gson.*;
 public class Chain {
 	
 	public static ArrayList<Block> blockchain = new ArrayList<Block>();
-	
+	public static int difficulty = 4;
+			
 	public static boolean isChainValid() {
 		Block currentBlock; 
 		Block previousBlock;
@@ -42,17 +43,23 @@ public class Chain {
 		
 		Block genesisBlock = new Block("Hi I am the first block", "0");
 		blockchain.add(genesisBlock);
+		System.out.println("Trying to mine the genesis block ... ");
+		blockchain.get(0).mineBlock(difficulty);
 				
 		Block secondBlock = new Block("I am the second block", 
 		blockchain.get(blockchain.size()-1).hash);
 		blockchain.add(secondBlock);
+		System.out.println("Trying to mine block 2 ... ");
+		blockchain.get(1).mineBlock(difficulty);
 				
 		Block thirdBlock = new Block("I am the third block", 
 		blockchain.get(blockchain.size()-1).hash);
 		blockchain.add(thirdBlock);
+		System.out.println("Trying to mine block 3 ... ");
+		blockchain.get(2).mineBlock(difficulty);
+
 				
-		String blockchainJson = 
-		new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
+		String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
 		System.out.println(blockchainJson);
 		
 		isChainValid();
