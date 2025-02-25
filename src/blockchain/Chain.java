@@ -29,17 +29,6 @@ public class Chain {
 		return true;
 	}
 	public static void main(String[] args) {
-//		Block genesisBlock = new Block("Hi I'm the first block", "0");
-//		genesisBlock.printBlock();
-//		
-//		Block secondBlock = new Block("I'm the second block", genesisBlock.hash);
-//		secondBlock.printBlock();
-//		
-//		Block thirdBlock = new Block("I'm the third block", secondBlock.hash);
-//		thirdBlock.printBlock();
-//		
-//		Block FakefirstBlock = new Block("I'm the fake first block", "0");
-//		FakefirstBlock.printBlock();
 		
 		Block genesisBlock = new Block("Hi I am the first block", "0");
 		blockchain.add(genesisBlock);
