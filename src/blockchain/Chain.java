@@ -11,9 +11,15 @@ public class Chain {
 	public static boolean isChainValid() {
 		Block currentBlock; 
 		Block previousBlock;
+		String hashTarget = new String(new char[difficulty]).replace('\0', '0');
 		for(int i=1; i < blockchain.size(); i++) {
 			currentBlock = blockchain.get(i);
 			previousBlock = blockchain.get(i-1);
+			//check if hash is correctly solved
+			if(!currentBlock.hash.substring( 0, difficulty).equals(hashTarget)) {
+				System.out.println("This block hasn't been mined");
+				return false;
+			}
 			//compare registered hash and calculated hash:
 			if(!currentBlock.hash.equals(currentBlock.calculateHash()) ){
 				System.out.println("Current Hashes not equal");			
@@ -24,6 +30,9 @@ public class Chain {
 				System.out.println("Previous Hashes not equal");
 				return false;
 			}
+			
+
+			
 		}
 		System.out.println("LETSSGOOOOOOOOOO");
 		return true;
@@ -45,7 +54,7 @@ public class Chain {
 		blockchain.get(blockchain.size()-1).hash);
 		blockchain.add(thirdBlock);
 		System.out.println("Trying to mine block 3 ... ");
-		blockchain.get(2).mineBlock(difficulty);
+//		blockchain.get(2).mineBlock(difficulty);
 
 				
 		String blockchainJson = new GsonBuilder().setPrettyPrinting().create().toJson(blockchain);
@@ -53,7 +62,9 @@ public class Chain {
 		
 		isChainValid();
 		
-		blockchain.get(2).prev = StringUtil.applySHA256("ahlaan");
-		isChainValid();
+//		TEMPERING ATTACK 
+//		blockchain.get(2).prev = StringUtil.applySHA256("ahlaan");
+//		isChainValid();
+		System.out.println("\nBlockchain is Valid: " + isChainValid());
 	}
 }
