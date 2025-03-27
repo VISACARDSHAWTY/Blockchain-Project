@@ -33,7 +33,7 @@ public class Wallet {
 	}
 	public float getBalance() {
 		float total = 0;	
-        for (Map.Entry<String, TransactionOutput> item: MyChain.UTXOs.entrySet()){
+        for (Map.Entry<String, TransactionOutput> item: Chain.UTXOs.entrySet()){
         	TransactionOutput UTXO = item.getValue();
             if(UTXO.isMine(publicKey)) { //if output belongs to me ( if coins belong to me )
             	UTXOs.put(UTXO.id,UTXO); //add it to our list of unspent transactions.
@@ -63,7 +63,7 @@ public class Wallet {
 		
 		// Gathers transaction inputs (Making sure they are unspent):
 		for(TransactionInput i : newTransaction.inputs) {
-			i.UTXO = MyChain.UTXOs.get(i.transactionOutputId);
+			i.UTXO = Chain.UTXOs.get(i.transactionOutputId);
 		}
 		
 		// Generate transaction outputs:
