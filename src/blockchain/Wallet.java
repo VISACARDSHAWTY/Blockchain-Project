@@ -45,7 +45,7 @@ public class Wallet {
 	
 	public Transaction sendFunds(PublicKey Newrecipient,float value ) {
 		if(getBalance() < value) {
-			System.out.println("#Not Enough funds to send transaction. Transaction Discarded.");
+			System.out.println("Not Enough funds to send transaction. Transaction Discarded.");
 			return null;
 		}
 		ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
