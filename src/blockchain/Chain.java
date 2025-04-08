@@ -32,8 +32,20 @@ public static void main(String[] args) {
 	o.connectToNetwork(chain);
 	
 	n.initializeBlockchain();
-	n.initializeBlockchain();
-	
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
 	
 //	walletA = new Wallet();
 //	walletB = new Wallet();

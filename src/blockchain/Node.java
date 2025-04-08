@@ -14,7 +14,7 @@ public class Node {
 	
 	public Wallet wallet; // each node has its own wallet, full node extends this class so it can act as both a miner and a client
 	
-	private Chain network; // pointer to the network a node is going to broadcast a transaction/block to
+	public Chain network; // pointer to the network a node is going to broadcast a transaction/block to
 	
 	
 	public Node(String n) {
@@ -48,8 +48,8 @@ public class Node {
 	private void broadcastTx(Transaction transaction) {
 		for (Node node : network.network) {
 			if (node instanceof FullNode) { // client nodes do not need to receive transactions as they won't mine them into blocks
-				((FullNode) node).receiveTx(transaction);
 				System.out.println(this.name + " broadcasted transaction " + transaction.transactionId + " to " + node.name);
+				((FullNode) node).receiveTx(transaction);
 			}
 		}
 	}
@@ -83,6 +83,11 @@ public class Node {
 			for (Transaction tx : block.transactions) {
 				for (TransactionOutput utxo : tx.outputs) {
 					UTXOs.put(utxo.id , utxo);
+				}
+				if (tx.inputs != null) {
+					for (TransactionInput utxo : tx.inputs) {
+						UTXOs.remove(utxo.transactionOutputId);
+					}
 				}
 			}
 			System.out.println(this.name + " received block " + block.hash + " and added to its copy of the BC.");
@@ -120,7 +125,7 @@ public class Node {
 				System.err.println("ERROR! Previous hash is not of the hash of the last block of the chain!");
 				valid = false;
 			}
-			else if (block.hash.startsWith("0".repeat(network.difficulty))) {
+			else if (!block.hash.startsWith("0".repeat(network.difficulty))) {
 				System.err.println("ERROR! Block has not been mined!");
 				valid = false;
 			}

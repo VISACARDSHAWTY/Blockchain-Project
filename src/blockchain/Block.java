@@ -10,7 +10,7 @@ public class Block {
 	public String merkleRoot;
 	public ArrayList<Transaction> transactions = new ArrayList<Transaction>();
 	private long timestamp; 
-	private int nonce;
+	public int nonce;
 	
 	//Block Constructor.
 	public Block(String previousHash ) {

@@ -41,11 +41,18 @@ public class FullNode extends Node {
 	}
 	
 	private void startMining() {
-		Block b = new Block(storedblockchain.get(-1).hash);
+		Block b = new Block(storedblockchain.get(storedblockchain.size() - 1).hash);
 		for (ConcurrentHashMap.Entry<String, Transaction> entry : mempool.entrySet()) {
 			Transaction tx = entry.getValue();
-			b.addTransaction(tx);
+			b.transactions.add(tx);
+			if (b.transactions.size() == MAX_TX_PER_BLOCK) break;
 		}
+		b.merkleRoot = StringUtil.getMerkleRoot(b.transactions);
+		while (!b.hash.startsWith("0".repeat(network.difficulty))) {
+			b.nonce++;
+			b.hash = b.calculateHash();
+		}
+		System.out.println(b.hash);
 	}
 
 }
