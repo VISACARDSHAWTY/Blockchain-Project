@@ -32,6 +32,7 @@ public static void main(String[] args) {
 	o.connectToNetwork(chain);
 	
 	n.initializeBlockchain();
+	
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
@@ -42,10 +43,62 @@ public static void main(String[] args) {
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
+	
+	
+//	Block bk = new Block("zimbabwe");
+//	ArrayList<TransactionInput> txinput = new ArrayList<TransactionInput>();
+//	TransactionOutput utxo = m.UTXOs.values().iterator().next();
+//	txinput.add(new TransactionInput(utxo.id));
+//	txinput.add(new TransactionInput(utxo.id));
+//	Transaction transaction = new Transaction(m.getPublicKey() , n.getPublicKey() , 10f , txinput);
+//	bk.merkleRoot = StringUtil.getMerkleRoot(bk.transactions);
+//	bk.prev = o.storedblockchain.get(o.storedblockchain.size() - 1).hash;
+//	bk.hash = bk.calculateHash();
+//	while (!bk.hash.startsWith("0".repeat(difficulty))) {
+//		bk.nonce++;
+//		bk.hash = bk.calculateHash();
+//	}
+//	o.broadcastBlock(bk);
+	System.out.println("\n\n\n" + n.name + "'s stored blockchain: ");
+	int counter = 1;
+	for (Block b : n.storedblockchain) {
+		System.out.println("Block #" + counter + ": " + b.hash);
+		System.out.println("Transactions in that block: ");
+		int counteragain = 1;
+		for (Transaction tx : b.transactions) {
+			System.out.println("Transaction #" + counter +"." + counteragain + ": " + tx.transactionId);
+			counteragain++;
+		}
+		counter++;
+	}
+	System.out.println("\n\n\n" + m.name + "'s stored blockchain: ");
+	counter = 1;
+	for (Block b : m.storedblockchain) {
+		System.out.println("Block #" + counter + ": " + b.hash);
+		System.out.println("Transactions in that block: ");
+		int counteragain = 1;
+		for (Transaction tx : b.transactions) {
+			System.out.println("Transaction #" + counter +"." + counteragain + ": " + tx.transactionId);
+			counteragain++;
+		}
+		counter++;
+	}
+	System.out.println("\n\n\n" + o.name + "'s stored blockchain: ");
+	counter = 1;
+	for (Block b : o.storedblockchain) {
+		System.out.println("Block #" + counter + ": " + b.hash);
+		System.out.println("Transactions in that block: ");
+		int counteragain = 1;
+		for (Transaction tx : b.transactions) {
+			System.out.println("Transaction #" + counter +"." + counteragain + ": " + tx.transactionId);
+			counteragain++;
+		}
+		counter++;
+	}
+	
+	System.out.println("\n\n" + n.name + "'s balance: " + n.getBalance());
+	System.out.println(m.name + "'s balance: " + m.getBalance());
+	
 	
 //	walletA = new Wallet();
 //	walletB = new Wallet();

@@ -42,7 +42,7 @@ public class Wallet {
 		return total;
 	}
 	
-	public Transaction sendFunds(PublicKey Newrecipient,float value ) {
+	public Transaction sendFunds(PublicKey Newrecipient , float value , HashMap<String,TransactionOutput> utxos) {
 //		if(getBalance() < value) {
 //			System.out.println("Not Enough funds to send transaction. Transaction Discarded.");
 //			return null;
@@ -50,19 +50,20 @@ public class Wallet {
 		ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
 		
 		float total = 0;
-		for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
-			TransactionOutput UTXO = item.getValue();
-			total += UTXO.value;
-			inputs.add(new TransactionInput(UTXO.id));
-			if(total > value) break;
+		for (Map.Entry<String, TransactionOutput> entry : utxos.entrySet()) {
+		    TransactionOutput item = entry.getValue();
+		    total += item.value;
+		    inputs.add(new TransactionInput(item.id));
+		    if (total > value) break;
 		}
+
 		
 		Transaction newTransaction = new Transaction(publicKey, Newrecipient , value, inputs);
 		newTransaction.generateSignature(privateKey);
 		
 		// Gathers transaction inputs (Making sure they are unspent):
 		for(TransactionInput i : newTransaction.inputs) {
-			i.UTXO = Chain.UTXOs.get(i.transactionOutputId);
+			i.UTXO = utxos.get(i.transactionOutputId);
 		}
 		
 		// Generate transaction outputs:
@@ -73,13 +74,13 @@ public class Wallet {
 		newTransaction.outputs.add(new TransactionOutput( newTransaction.recipient, 
 										newTransaction.value, newTransaction.transactionId)); 
 		// Send the left over 'change' back to sender
-		newTransaction.outputs.add(new TransactionOutput( newTransaction.sender, 
-										leftOver, newTransaction.transactionId)); 		
+		TransactionOutput leftover = new TransactionOutput( newTransaction.sender, leftOver, newTransaction.transactionId);
+		leftover.lock();
+		newTransaction.outputs.add(leftover);
 		
 		for(TransactionInput input: inputs){
 			UTXOs.remove(input.transactionOutputId);
 		}
-		
 		return newTransaction;
 	}
 }

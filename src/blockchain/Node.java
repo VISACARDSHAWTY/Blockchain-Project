@@ -10,8 +10,8 @@ public class Node {
 	public String name;
 	// each node has a copy of the blockchain and the utxo set
 	public ArrayList<Block> storedblockchain;
-	public static HashMap<String,TransactionOutput> UTXOs = new HashMap<String,TransactionOutput>(); 
-	
+	public HashMap<String,TransactionOutput> UTXOs = new HashMap<String,TransactionOutput>(); 
+	public HashMap<String,TransactionOutput> unminedUTXOs = new HashMap<String,TransactionOutput>(); 
 	public Wallet wallet; // each node has its own wallet, full node extends this class so it can act as both a miner and a client
 	
 	public Chain network; // pointer to the network a node is going to broadcast a transaction/block to
@@ -38,19 +38,31 @@ public class Node {
 	}
 	
 	public void createTx(PublicKey receiver , float value) {
-		Transaction transaction = wallet.sendFunds(receiver , value);
+		Transaction transaction = wallet.sendFunds(receiver , value , getUTXOs());
 		if (transaction == null) {
+			System.err.println("ERROR! Transaction was not created!");
 			return;
+		}
+		for (TransactionInput txinput : transaction.inputs) {
+			try {
+				UTXOs.get(txinput.transactionOutputId).lock();
+			} catch (NullPointerException e) {
+				unminedUTXOs.get(txinput.transactionOutputId).lock();
+			}
 		}
 		broadcastTx(transaction);
 	}
 	
 	private void broadcastTx(Transaction transaction) {
 		for (Node node : network.network) {
-			if (node instanceof FullNode) { // client nodes do not need to receive transactions as they won't mine them into blocks
-				System.out.println(this.name + " broadcasted transaction " + transaction.transactionId + " to " + node.name);
-				((FullNode) node).receiveTx(transaction);
-			}
+			System.out.println(this.name + " broadcasted transaction " + transaction.transactionId + " to " + node.name);
+			node.receiveTx(transaction);
+		}
+	}
+	
+	public void receiveTx(Transaction transaction) {
+		if (validateTx(transaction)) {
+			unminedUTXOs.put(transaction.outputs.get(1).id, transaction.outputs.get(1));
 		}
 	}
 	
@@ -65,7 +77,7 @@ public class Node {
 		genesis_tx.outputs.add(new TransactionOutput(genesis_tx.recipient , genesis_tx.value , "0"));
 		
 		Block genesis_b = new Block("0");
-		genesis_b.addTransaction(genesis_tx);
+		genesis_b.transactions.add(genesis_tx);
 		genesis_b.merkleRoot = StringUtil.getMerkleRoot(genesis_b.transactions);
 		genesis_b.hash = genesis_b.calculateHash();
 		
@@ -82,11 +94,13 @@ public class Node {
 			storedblockchain.add(block);
 			for (Transaction tx : block.transactions) {
 				for (TransactionOutput utxo : tx.outputs) {
+					utxo.unlock();
 					UTXOs.put(utxo.id , utxo);
 				}
 				if (tx.inputs != null) {
 					for (TransactionInput utxo : tx.inputs) {
 						UTXOs.remove(utxo.transactionOutputId);
+						unminedUTXOs.remove(utxo.transactionOutputId);
 					}
 				}
 			}
@@ -104,24 +118,32 @@ public class Node {
 		}
 		else {
 			boolean valid = true;
+			
 			HashSet<String> seenIds = new HashSet<>();
 	        boolean duplicates = false;
+	        boolean txvalid = true;
+	        
 	        for (Transaction transaction : block.transactions) {
 	            for (TransactionInput input : transaction.inputs) {
 	                if (!seenIds.add(input.transactionOutputId)) {
 	                    duplicates = true;
+	                    break;
 	                }
+	            }
+	            if (!validateTx(transaction)) {
+	            	txvalid = false;
+	            	break;
 	            }
 	        }
 			if (!block.hash.equals(block.calculateHash())) {
 				System.err.println("ERROR! Hash is not of the block's content!");
 				valid = false;
 			}
-			else if ((StringUtil.getMerkleRoot(block.transactions).equals(block.merkleRoot))) {
+			else if (!(StringUtil.getMerkleRoot(block.transactions).equals(block.merkleRoot))) {
 				System.err.println("ERROR! Merkle root does not represent the transactions!");
 				valid = false;
 			}
-			else if (block.prev.equals(storedblockchain.get(-1).hash)) {
+			else if (!block.prev.equals(storedblockchain.get(storedblockchain.size() - 1).hash)) {
 				System.err.println("ERROR! Previous hash is not of the hash of the last block of the chain!");
 				valid = false;
 			}
@@ -131,6 +153,9 @@ public class Node {
 			}
 			else if (duplicates) {
 				System.err.println("ERROR! Block has two transactions using the same UTXO twice!");
+				valid = false;
+			}
+			else if (!txvalid) {
 				valid = false;
 			}
 			return valid;
@@ -143,22 +168,40 @@ public class Node {
 			return false;
 		}
 		for (TransactionInput utxo : tx.inputs) {
-			if (UTXOs.containsKey(utxo.transactionOutputId)) {
-				System.err.println("ERROR! Transaction contains a previously used UTXO!");
+			if (!UTXOs.containsKey(utxo.transactionOutputId) && !unminedUTXOs.containsKey(utxo.transactionOutputId)) {
+				System.err.println("ERROR! Transaction contains previously used or non-existent UTXO!");
 				return false;
 			}
 		}
 		return true;
 	}
 	
+	public HashMap<String,TransactionOutput> getUTXOs() {
+		HashMap<String,TransactionOutput> utxos = new HashMap<String,TransactionOutput>();
+		for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
+        	TransactionOutput UTXO = item.getValue();
+            if(UTXO.isMine(getPublicKey()) && !UTXO.locked) {
+            	utxos.put(UTXO.id , UTXO);
+            }
+        }
+		for (Map.Entry<String, TransactionOutput> item: unminedUTXOs.entrySet()){
+        	TransactionOutput UTXO = item.getValue();
+            if(UTXO.isMine(getPublicKey()) && !UTXO.locked) {
+            	utxos.put(UTXO.id , UTXO);
+            }
+        }
+		return utxos;
+	}
+	
+	
 	public float getBalance() {
 		float total = 0;	
-        for (Map.Entry<String, TransactionOutput> item: UTXOs.entrySet()){
-        	TransactionOutput UTXO = item.getValue();
-            if(UTXO.isMine(getPublicKey())) {
-            	total += UTXO.value ; 
-            }
-        }  
+		for (TransactionOutput utxo : getUTXOs().values()) {
+		    if (utxo.isMine(getPublicKey())) {
+		        total += utxo.value;
+		    }
+		}
+
 		return total;
 	}
 	

@@ -53,8 +53,7 @@ public class Block {
 		System.out.println("Transaction Successfully added to Block");
 		return true;
 	}
-	public
-	void printBlock() {
+	public void printBlock() {
 		System.out.println();	
 		System.out.println("Block Timestamp: " + this.timestamp);
 		System.out.println("Block Hash: " + this.hash);
