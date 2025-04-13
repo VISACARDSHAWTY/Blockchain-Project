@@ -38,7 +38,8 @@ public class Node {
 	}
 	
 	public void createTx(PublicKey receiver , float value) {
-		Transaction transaction = wallet.sendFunds(receiver , value , getUTXOs());
+		HashMap<String, TransactionOutput> utxos = getUTXOs();
+		Transaction transaction = wallet.sendFunds(receiver , value , utxos);
 		if (transaction == null) {
 			System.err.println("ERROR! Transaction was not created!");
 			return;
@@ -95,6 +96,7 @@ public class Node {
 			for (Transaction tx : block.transactions) {
 				for (TransactionOutput utxo : tx.outputs) {
 					utxo.unlock();
+					utxo.mined = true;
 					UTXOs.put(utxo.id , utxo);
 				}
 				if (tx.inputs != null) {

@@ -11,20 +11,20 @@ public class Transaction {
 	public float value;
 	// this is to prevent anybody else from spending funds in our wallet.
 	public byte[] signature; 
-
+	
 	public ArrayList<TransactionInput> inputs = new ArrayList<TransactionInput>();
 	public ArrayList<TransactionOutput> outputs = new ArrayList<TransactionOutput>();
-
+	public ArrayList<String> chainTx; // the ids of the parent transaction of the txinput if the UTXO has not been processed , if empty there are no problems
 	// a rough count of how many transactions have been generated.
 	private static int sequence = 0; 
 	
 	// Constructor: 
-		public Transaction(PublicKey from, PublicKey to, 
-				float value,  ArrayList<TransactionInput> inputs) {
+		public Transaction(PublicKey from, PublicKey to, float value,  ArrayList<TransactionInput> inputs) {
 			this.sender = from;
 			this.recipient = to;
 			this.value = value;
 			this.inputs = inputs;
+			this.chainTx = new  ArrayList<String>();
 		}
 		
 		// This Calculates the transaction hash (which will be used as its Id)

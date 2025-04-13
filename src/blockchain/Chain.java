@@ -2,6 +2,8 @@ package blockchain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+
 import java.security.Security;
 
 public class Chain {
@@ -32,9 +34,10 @@ public static void main(String[] args) {
 	o.connectToNetwork(chain);
 	
 	n.initializeBlockchain();
-	
+	System.err.println(n.UTXOs.values().iterator().next().locked);
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
+	System.err.println(n.UTXOs.values().iterator().next().locked);
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);
 	n.createTx(m.getPublicKey() , 5);

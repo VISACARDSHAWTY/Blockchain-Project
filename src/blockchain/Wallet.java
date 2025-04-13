@@ -64,18 +64,20 @@ public class Wallet {
 		// Gathers transaction inputs (Making sure they are unspent):
 		for(TransactionInput i : newTransaction.inputs) {
 			i.UTXO = utxos.get(i.transactionOutputId);
+			if (!i.UTXO.mined) {
+				newTransaction.chainTx.add(i.UTXO.parentTransactionId);
+			}
 		}
 		
 		// Generate transaction outputs:
 		// Get value of inputs and calculate the left over:
-		float leftOver = newTransaction.getInputsValue() - value; 
+		float leftOver = newTransaction.getInputsValue() - value;
 		newTransaction.transactionId = newTransaction.calculateHash();
 		// Send value to recipient
 		newTransaction.outputs.add(new TransactionOutput( newTransaction.recipient, 
 										newTransaction.value, newTransaction.transactionId)); 
 		// Send the left over 'change' back to sender
 		TransactionOutput leftover = new TransactionOutput( newTransaction.sender, leftOver, newTransaction.transactionId);
-		leftover.lock();
 		newTransaction.outputs.add(leftover);
 		
 		for(TransactionInput input: inputs){

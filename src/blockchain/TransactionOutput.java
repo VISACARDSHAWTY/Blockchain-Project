@@ -10,6 +10,7 @@ public class TransactionOutput {
 	//the id of the transaction this output was created in
 	public String parentTransactionId;
 	
+	public boolean mined;
 	public boolean locked;
 	
 	//Constructor
@@ -19,6 +20,7 @@ public class TransactionOutput {
 		this.parentTransactionId = parentTransactionId;
 		this.id = StringUtil.applySHA256((String) (StringUtil.getStringFromKey(recipient) + Float.toString(value) + parentTransactionId));
 		this.locked = false;
+		this.mined = false;
 	}
 	
 	//Check if coin belongs to you

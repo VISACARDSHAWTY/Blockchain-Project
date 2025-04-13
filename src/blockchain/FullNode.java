@@ -1,6 +1,8 @@
 package blockchain;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class FullNode extends Node {
@@ -46,10 +48,11 @@ public class FullNode extends Node {
 	
 	public void startMining() {
 		Block b = new Block(storedblockchain.get(storedblockchain.size() - 1).hash);
+		Set<String> addedTx = new HashSet<>();
 		for (ConcurrentHashMap.Entry<String, Transaction> entry : mempool.entrySet()) {
-			Transaction tx = entry.getValue();
-			b.transactions.add(tx);
 			if (b.transactions.size() == MAX_TX_PER_BLOCK) break;
+			Transaction tx = entry.getValue();
+			addTx(tx , b , addedTx);
 		}
 		b.merkleRoot = StringUtil.getMerkleRoot(b.transactions);
 		while (!b.hash.startsWith("0".repeat(network.difficulty))) {
@@ -58,6 +61,25 @@ public class FullNode extends Node {
 		}
 		broadcastBlock(b);
 		System.out.println(b.hash);
+	}
+	
+	private void addTx(Transaction tx, Block b, Set<String> addedTx) {
+	    if (addedTx.contains(tx.transactionId) || b.transactions.size() >= MAX_TX_PER_BLOCK) {
+	        return;
+	    }
+
+	    for (String depId : tx.chainTx) {
+	        if (b.transactions.size() >= MAX_TX_PER_BLOCK) break;
+	        if (mempool.containsKey(depId)) {
+	            Transaction depTx = mempool.get(depId);
+	            addTx(depTx, b, addedTx);
+	        }
+	    }
+
+	    if (!addedTx.contains(tx.transactionId) && b.transactions.size() < MAX_TX_PER_BLOCK) {
+	        b.transactions.add(tx);
+	        addedTx.add(tx.transactionId);
+	    }
 	}
 	
 	public void broadcastBlock(Block block) {
