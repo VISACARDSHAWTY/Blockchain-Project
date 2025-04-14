@@ -38,6 +38,10 @@ public class Node {
 	}
 	
 	public void createTx(PublicKey receiver , float value) {
+		if (getBalance() < value) {
+			System.err.println("ERROR! Wallet's balance is not enough to send " + value + " MARKCOIN!");
+			return;
+		}
 		HashMap<String, TransactionOutput> utxos = getUTXOs();
 		Transaction transaction = wallet.sendFunds(receiver , value , utxos);
 		if (transaction == null) {
@@ -63,7 +67,11 @@ public class Node {
 	
 	public void receiveTx(Transaction transaction) {
 		if (validateTx(transaction)) {
-			unminedUTXOs.put(transaction.outputs.get(1).id, transaction.outputs.get(1));
+//			for (TransactionOutput utxo : transaction.outputs) {
+//				unminedUTXOs.put(utxo.id, utxo);
+//			}
+//			this adds all the utxos to the unmined utxos but this can cause conflicts
+			unminedUTXOs.put(transaction.outputs.get(1).id, transaction.outputs.get(1)); // this only adds the leftover utxos, only problem is true balance of the receipient doesnt show unless the utxo is mined which is alright.
 		}
 	}
 	
@@ -72,7 +80,7 @@ public class Node {
 			System.err.println("ERROR! Blockchain is already initialized!");
 			return;
 		}
-		Transaction genesis_tx = new Transaction(this.getPublicKey() , this.getPublicKey() , 100f , null);
+		Transaction genesis_tx = new Transaction(this.getPublicKey() , this.getPublicKey() , network.genesis_reward , null);
 		genesis_tx.generateSignature(this.getPrivateKey());
 		genesis_tx.transactionId = "0";
 		genesis_tx.outputs.add(new TransactionOutput(genesis_tx.recipient , genesis_tx.value , "0"));
@@ -113,7 +121,7 @@ public class Node {
 		
 	}
 	
-	private boolean validateBlock(Block block) {
+	protected boolean validateBlock(Block block) {
 		if (block.prev.equals("0")) {
 			boolean valid = (block.hash.equals(block.calculateHash()) && (StringUtil.getMerkleRoot(block.transactions).equals(block.merkleRoot)));
 			return valid;
@@ -126,6 +134,9 @@ public class Node {
 	        boolean txvalid = true;
 	        
 	        for (Transaction transaction : block.transactions) {
+	        	if (transaction.inputs == null) {
+	        		continue;
+	        	}
 	            for (TransactionInput input : transaction.inputs) {
 	                if (!seenIds.add(input.transactionOutputId)) {
 	                    duplicates = true;

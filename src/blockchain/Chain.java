@@ -15,17 +15,16 @@ public class Chain {
 								new HashMap<String,TransactionOutput>(); 
 	public static float minimumTransaction = 0.1f;
 	
-	public static Wallet walletA;
-	public static Wallet walletB;
-	
 	public static Transaction genesisTransaction;
 	
 	public ArrayList<Node> network;
+	public Wallet coinbase;
+	public float genesis_reward;
 	
 public static void main(String[] args) {
 	
 	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); 
-	Chain chain = new Chain();
+	Chain chain = new Chain(100f);
 	Node n = new Node("Satoshi Nakamoto");
 	n.connectToNetwork(chain);;
 	Node m = new Node("Mark");
@@ -34,26 +33,26 @@ public static void main(String[] args) {
 	o.connectToNetwork(chain);
 	
 	n.initializeBlockchain();
-	System.err.println(n.UTXOs.values().iterator().next().locked);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	System.err.println(n.UTXOs.values().iterator().next().locked);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
-	n.createTx(m.getPublicKey() , 5);
+	for (int i = 0 ; i < 2020 ; i++) {
+		if (i % 2 == 0) {
+			n.createTx(m.getPublicKey() , 5);
+		}
+		else {
+			m.createTx(n.getPublicKey() , 5);
+		}
+		System.err.println(i);
+	}
 	
 	
-//	Block bk = new Block("zimbabwe");
+	
+//	Block bk = new Block("z");
 //	ArrayList<TransactionInput> txinput = new ArrayList<TransactionInput>();
-//	TransactionOutput utxo = m.UTXOs.values().iterator().next();
-//	txinput.add(new TransactionInput(utxo.id));
+//	TransactionOutput utxo = m.storedblockchain.get(1).transactions.get(4).outputs.get(1);
 //	txinput.add(new TransactionInput(utxo.id));
 //	Transaction transaction = new Transaction(m.getPublicKey() , n.getPublicKey() , 10f , txinput);
+//	transaction.generateSignature(m.getPrivateKey());
+//	transaction.transactionId = transaction.calculateHash();
+//	bk.transactions.add(transaction);
 //	bk.merkleRoot = StringUtil.getMerkleRoot(bk.transactions);
 //	bk.prev = o.storedblockchain.get(o.storedblockchain.size() - 1).hash;
 //	bk.hash = bk.calculateHash();
@@ -62,6 +61,8 @@ public static void main(String[] args) {
 //		bk.hash = bk.calculateHash();
 //	}
 //	o.broadcastBlock(bk);
+	
+	
 	System.out.println("\n\n\n" + n.name + "'s stored blockchain: ");
 	int counter = 1;
 	for (Block b : n.storedblockchain) {
@@ -92,6 +93,7 @@ public static void main(String[] args) {
 		System.out.println("Block #" + counter + ": " + b.hash);
 		System.out.println("Transactions in that block: ");
 		int counteragain = 1;
+		System.err.println("REWARD = " + b.transactions.get(0).value);
 		for (Transaction tx : b.transactions) {
 			System.out.println("Transaction #" + counter +"." + counteragain + ": " + tx.transactionId);
 			counteragain++;
@@ -101,6 +103,7 @@ public static void main(String[] args) {
 	
 	System.out.println("\n\n" + n.name + "'s balance: " + n.getBalance());
 	System.out.println(m.name + "'s balance: " + m.getBalance());
+	System.out.println(o.name + "'s balance: " + o.getBalance());
 	
 	
 //	walletA = new Wallet();
@@ -166,8 +169,10 @@ public static void main(String[] args) {
 //	}
 }
 
-public Chain() {
+public Chain(float r) {
 	network = new ArrayList<Node>();
+	coinbase = new Wallet();
+	genesis_reward = r;
 }
 public static void addBlock(Block newBlock) {
 	newBlock.mineBlock(difficulty);

@@ -72,6 +72,10 @@ public class Wallet {
 		// Generate transaction outputs:
 		// Get value of inputs and calculate the left over:
 		float leftOver = newTransaction.getInputsValue() - value;
+		if (leftOver < 0) {
+			System.err.println("W ZABER METDAYYAN MNEL BANK?!?!");
+			System.exit(0);
+		}
 		newTransaction.transactionId = newTransaction.calculateHash();
 		// Send value to recipient
 		newTransaction.outputs.add(new TransactionOutput( newTransaction.recipient, 
