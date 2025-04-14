@@ -8,7 +8,7 @@ import java.security.Security;
 
 public class Chain {
 	
-	public static int difficulty = 3;
+	public static int difficulty = 5;
 	public static ArrayList<Block> blockchain = new ArrayList<Block>();
 	// list of all unspent transactions outputs in the blockchain
 	public static HashMap<String,TransactionOutput> UTXOs = 
@@ -31,20 +31,35 @@ public static void main(String[] args) {
 	m.connectToNetwork(chain);;
 	FullNode o = new FullNode("Miner - A");
 	o.connectToNetwork(chain);
+	FullNode p = new FullNode("Miner - B");
+	p.connectToNetwork(chain);
 	
 	n.initializeBlockchain();
-	for (int i = 0 ; i < 2020 ; i++) {
-		if (i % 2 == 0) {
-			n.createTx(m.getPublicKey() , 5);
-		}
-		else {
-			m.createTx(n.getPublicKey() , 5);
-		}
-		System.err.println(i);
-	}
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+	n.createTx(m.getPublicKey() , 5);
+//	for (int i = 0 ; i < 2020 ; i++) {
+//		if (i % 2 == 0) {
+//			n.createTx(m.getPublicKey() , 5);
+//		}
+//		else {
+//			m.createTx(n.getPublicKey() , 5);
+//		}
+//		System.err.println(i);
+//	}
 	
 	
-	
+	try {
+        Thread.sleep(10000); // Wait 10 seconds
+    } catch (InterruptedException e) {
+        e.printStackTrace();
+    }
 //	Block bk = new Block("z");
 //	ArrayList<TransactionInput> txinput = new ArrayList<TransactionInput>();
 //	TransactionOutput utxo = m.storedblockchain.get(1).transactions.get(4).outputs.get(1);
@@ -101,9 +116,24 @@ public static void main(String[] args) {
 		counter++;
 	}
 	
+	System.out.println("\n\n\n" + p.name + "'s stored blockchain: ");
+	counter = 1;
+	for (Block b : p.storedblockchain) {
+		System.out.println("Block #" + counter + ": " + b.hash);
+		System.out.println("Transactions in that block: ");
+		int counteragain = 1;
+		System.err.println("REWARD = " + b.transactions.get(0).value);
+		for (Transaction tx : b.transactions) {
+			System.out.println("Transaction #" + counter +"." + counteragain + ": " + tx.transactionId);
+			counteragain++;
+		}
+		counter++;
+	}
+	
 	System.out.println("\n\n" + n.name + "'s balance: " + n.getBalance());
 	System.out.println(m.name + "'s balance: " + m.getBalance());
 	System.out.println(o.name + "'s balance: " + o.getBalance());
+	System.out.println(p.name + "'s balance: " + p.getBalance());
 	
 	
 //	walletA = new Wallet();

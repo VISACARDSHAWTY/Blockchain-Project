@@ -9,10 +9,13 @@ public class FullNode extends Node {
 	public FullNode(String n) {
 		super(n);
 		mempool = new ConcurrentHashMap<>();
+		mining = false;
 	}
 
 	protected ConcurrentHashMap<String, Transaction> mempool;
 	public static int MAX_TX_PER_BLOCK = 10;
+	public boolean mining;
+	private Thread miningThread;
 	
 	@Override
 	public void receiveTx(Transaction transaction) {
@@ -50,27 +53,53 @@ public class FullNode extends Node {
 	}
 	
 	public void startMining() {
-		Block b = new Block(storedblockchain.get(storedblockchain.size() - 1).hash);
-		Transaction coinbase = coinbaseTx();
-		b.transactions.add(coinbase);
-		Set<String> addedTx = new HashSet<>();
-		for (ConcurrentHashMap.Entry<String, Transaction> entry : mempool.entrySet()) {
-			if (b.transactions.size() == MAX_TX_PER_BLOCK) break;
-			Transaction tx = entry.getValue();
-			addTx(tx , b , addedTx);
-		}
-		b.merkleRoot = StringUtil.getMerkleRoot(b.transactions);
-		while (!b.hash.startsWith("0".repeat(network.difficulty))) {
-			b.nonce++;
-			b.hash = b.calculateHash();
-		}
-		broadcastBlock(b);
-		System.out.println(b.hash);
+if (mining) return;
+        
+        mining = true;
+        
+        miningThread = new Thread(() -> {
+            try {
+                Block b = new Block(storedblockchain.get(storedblockchain.size() - 1).hash);
+                Transaction coinbase = coinbaseTx();
+                b.transactions.add(coinbase);
+                Set<String> addedTx = new HashSet<>();
+                
+                ArrayList<Transaction> mempoolCopy = new ArrayList<>(mempool.values());
+                
+                for (Transaction tx : mempoolCopy) {
+                    if (b.transactions.size() == MAX_TX_PER_BLOCK) break;
+                    addTx(tx, b, addedTx);
+                }
+                
+                b.merkleRoot = StringUtil.getMerkleRoot(b.transactions);
+                
+                
+                while (!b.hash.startsWith("0".repeat(network.difficulty))) {
+                    // Check if the blockchain has changed since we started mining
+                    if (!storedblockchain.get(storedblockchain.size() - 1).hash.equals(b.prev)) {
+                        mining = false;
+                        return;
+                    }
+                    
+                    b.nonce++;
+                    b.hash = b.calculateHash();
+                }
+                broadcastBlock(b);
+            } finally {
+                mining = false;
+            }
+        });
+        
+        miningThread.start();
 	}
 	
 	@Override
 	public boolean receiveBlock(Block block) {
 		if (validateBlock(block)) {
+			if (mining && miningThread != null) {
+	            miningThread.interrupt();
+	            mining = false;
+	        }
 			storedblockchain.add(block);
 			for (Transaction tx : block.transactions) {
 				for (TransactionOutput utxo : tx.outputs) {
@@ -87,6 +116,10 @@ public class FullNode extends Node {
 				mempool.remove(tx.transactionId);
 			}
 			System.out.println(this.name + " received block " + block.hash + " and added to its copy of the BC.");
+			
+			if (!mining && mempool.size() >= MAX_TX_PER_BLOCK - 1) {
+                startMining();
+            }
 			return true;
 		}
 		return false;
